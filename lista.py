@@ -37,7 +37,7 @@ st.write("---")
 df, worksheet = get_gsheet_data()
 
 for index, row in df.iterrows():
-    col1, col2, col3, col4, col5 = st.columns([0.5,3,1,1,2])
+    col1, col2, col3, col4, col5 = st.columns([0.3,2.5,1.3,1,2])
 
     with col1:
         st.write(f"**{row['Orden']}**")
@@ -49,18 +49,17 @@ for index, row in df.iterrows():
         st.markdown(f"[Enlace de Compra]({row['Link_de_compra']})")
     with col5:
         status = row['Nos_confirmas_tu_regalo?']
-        if "Comprado" in status:
-            st.success(status)
-        else:
-            new_status = st.radio(
-                f"Confirmanos tu regalo:", #(ID: {row['Orden']})
-                ["Aún No :(", "Comprado Felicidades!"],
-                index=0 if "Aún" in status else 1, # Mantener la selección anterior
-                key=f"status_radio_{index}"
-            )
-            if new_status != status:
-                update_gift_status(worksheet, index, new_status)
-                st.rerun() # Volver a ejecutar para actualizar la vista
+        options = ["Aún No :(", "Si Felicidades! =)"]
+        default_index = 0 if "Aún" in status else 1
+        new_status = st.selectbox(
+            f"Confirmanos tu regalo:",
+            options,
+            index=default_index,
+            key=f"status_selectbox_{index}"
+        )
+        if new_status != status:
+            update_gift_status(worksheet, index, new_status)
+            st.rerun() # Volver a ejecutar para actualizar la vista
 
 st.write("---")
 st.markdown("¡Gracias por tu generosidad!")
