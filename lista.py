@@ -34,10 +34,28 @@ st.markdown("Cualquier duda o mensaje no dudes en escribirnos al Whatsapp de Cla
 st.markdown("¡Gracias por ser parte de esta maravillosa aventura gemelar!")
 st.write("---")
 
+st.markdown(
+    """
+    <style>
+    div[data-baseweb="select"] > div {
+        margin-bottom: 0px !important; /* Reducir el margen inferior del selectbox */
+    }
+    div.stButton > button {
+        margin-top: 1.7em !important; /* Añadir un margen superior al botón */
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+        height: auto !important; /* Ajustar la altura automáticamente */
+        line-height: 1 !important; /* Reducir el espaciado de la línea */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 df, worksheet = get_gsheet_data()
 
 for index, row in df.iterrows():
-    col1, col2, col3, col4, col5 = st.columns([0.3,2.5,1.3,1,2])
+    col1, col2, col3, col4, col5, col6 = st.columns([0.4,2.2,1.4,1,1.8,1.1])
 
     with col1:
         st.write(f"**{row['Orden']}**")
@@ -49,17 +67,24 @@ for index, row in df.iterrows():
         st.markdown(f"[Enlace de Compra]({row['Link_de_compra']})")
     with col5:
         status = row['Nos_confirmas_tu_regalo?']
-        options = ["Aún No :(", "Si Felicidades! =)"]
-        default_index = 0 if "Aún" in status else 1
+        options = ["no", "Regalado! =)"]
+        default_index = 0 if "-" in status else 1
         new_status = st.selectbox(
-            f"Confirmanos tu regalo:",
+            "Estado Guardado:",
             options,
             index=default_index,
             key=f"status_selectbox_{index}"
         )
-        if new_status != status:
-            update_gift_status(worksheet, index, new_status)
-            st.rerun() # Volver a ejecutar para actualizar la vista
+        # Almacenar el nuevo estado en la sesión para que persista al hacer clic en el botón
+        st.session_state[f"new_status_{index}"] = new_status
+    with col6:
+        if st.button("Guardar", key=f"save_button_{index}"):
+            old_status = row['Nos_confirmas_tu_regalo?']
+            saved_status = st.session_state.get(f"new_status_{index}", old_status)
+            if saved_status != old_status:
+                update_gift_status(worksheet, index, saved_status)
+                st.success("¡Estado guardado!")
+                st.rerun() # Volver a ejecutar para actualizar la vista
 
 st.write("---")
 st.markdown("¡Gracias por tu generosidad!")
