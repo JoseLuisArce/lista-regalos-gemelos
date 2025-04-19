@@ -74,7 +74,7 @@ st.markdown(
         background-image: url("https://i.postimg.cc/7Ys2s4P2/Fondo-Pantalla-BShower.png") !important;
         background-size: cover !important;
         background-repeat: no-repeat !important;
-        background-position: center !important;        
+        background-position: center center !important;        
     }}   
     h1 {{
         color: white !important;
