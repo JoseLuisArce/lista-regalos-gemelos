@@ -1,2 +1,5 @@
-# Archivos credenciales acceso Google
-listaregalosgemelos-9aab84e6b567.json
+# Environments
+.venv/
+
+# Credentials
+.env

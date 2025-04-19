@@ -1,25 +1,56 @@
 import streamlit as st
 import pandas as pd
-from gspread import service_account
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+#import gspread
+#from google.oauth2.service_account import Credentials
 
-# --- Configuracion de la conexion a Google Sheets ---
-
-CREDENTIALS_FILE = "D:/arcad/Escritorio/JAC/Proyectos/ListaRegalosGemelos/listaregalosgemelos-9aab84e6b567.json"
-SPREADSHEET_ID = "1F5IhqmaFbkE-b9DrW62kxDJ1aPd1ntjXcOvUrtiMXRk" 
-WORKSHEET_NAME = "lista"
+load_dotenv()
+supabase_url = os.environ.get("SUPABASE_URL")
+supabase_anon_key = os.environ.get("SUPABASE_ANON_KEY")
+supabase: Client = create_client(supabase_url, supabase_anon_key)
 
 @st.cache_resource
-def get_gsheet_data():
-    gc = service_account(filename=CREDENTIALS_FILE)
-    sh = gc.open_by_key(SPREADSHEET_ID)
-    worksheet = sh.worksheet(WORKSHEET_NAME)
-    data = worksheet.get_all_values()
-    df = pd.DataFrame(data[1:], columns=data[0])
-    return df, worksheet
+def get_supabase_data():
+    data = supabase.table("lista_regalos").select("*").execute()
+    df = pd.DataFrame(data.data)  # Extrae los datos correctamente
+    return df
 
-def update_gift_status(worksheet, index, new_status):
-    worksheet.update_cell(index + 2, 6, new_status)  # Actualiza la columna de estado
-    # +2 porque los indices empiezan en 1 y hay encabezado
+def update_gift_status(index, new_status):
+    confirmed_value = True if new_status == "Regalado! =)" else False
+    data, count = supabase.table("lista_regalos").update({"confirmado": confirmed_value}).eq("orden", index + 1).execute()
+    return data, count
+
+# --- Configuracion de la conexion a Google Sheets 1 --- #
+#CREDENTIALS_INFO = {
+#    "type": os.environ.get("GOOGLE_SHEETS_TYPE"),
+#    "project_id": os.environ.get("GOOGLE_SHEETS_PROJECT_ID"),
+#    "private_key_id": os.environ.get("GOOGLE_SHEETS_PRIVATE_KEY_ID"),
+#    "private_key": os.environ.get("GOOGLE_SHEETS_PRIVATE_KEY").replace('\\n', '\n'),
+#    "client_email": os.environ.get("GOOGLE_SHEETS_CLIENT_EMAIL"),
+#    "client_id": os.environ.get("GOOGLE_SHEETS_CLIENT_ID"),
+#    "auth_uri": os.environ.get("GOOGLE_SHEETS_AUTH_URI", "https://accounts.google.com/o/oauth2/auth"),
+#    "token_uri": os.environ.get("GOOGLE_SHEETS_TOKEN_URI", "https://oauth2.googleapis.com/token"),
+#    "auth_provider_x509_cert_url": os.environ.get("GOOGLE_SHEETS_AUTH_PROVIDER_X509_CERT_URL", "https://www.googleapis.com/oauth2/v1/certs"),
+#    "client_x509_cert_url": os.environ.get("GOOGLE_SHEETS_CLIENT_X509_CERT_URL"),
+#    "universe_domain": os.environ.get("GOOGLE_SHEETS_UNIVERSE_DOMAIN", "googleapis.com")
+#}
+#SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
+#WORKSHEET_NAME = os.environ.get("WORKSHEET_NAME")
+#SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+# --- Configuracion de la conexion a Google Sheets 2 --- #
+#@st.cache_resource
+#def get_gsheet_data():
+#    creds = Credentials.from_service_account_info(CREDENTIALS_INFO, scopes=SCOPES)  
+#    gc = gspread.authorize(creds)  # Autentica con las credenciales
+#    sh = gc.open_by_key(SPREADSHEET_ID)
+#    worksheet = sh.worksheet(WORKSHEET_NAME)
+#    data = worksheet.get_all_values()
+#    df = pd.DataFrame(data[1:], columns=data[0])
+#    return df, worksheet
+#def update_gift_status(worksheet, index, new_status):
+#    worksheet.update_cell(index + 2, 6, new_status)  # Actualiza la columna estado
 
 # --- Diseño de la aplicación ---
 
@@ -66,23 +97,25 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-df, worksheet = get_gsheet_data()
+#df, worksheet = get_gsheet_data()
+df = get_supabase_data()
 
 for index, row in df.iterrows():
     col1, col2, col3, col4, col5, col6 = st.columns([0.4,2,1.4,1,1.8,1.2])
 
     with col1:
-        st.write(f"**{row['Orden']}**")
+        st.write(f"**{row['orden']}**")
     with col2:
-        st.write(f"**{row['Categoria']} - {row['Tipo_de_regalo']}**")
+        st.write(f"**{row['categoria']} - {row['tipo_regalo']}**")
     with col3:
-        st.write(f"Precio: {row['Precio']}")
+        st.write(f"Precio: S/.{float(row['precio']):.2f}")
     with col4:
-        st.markdown(f"[Enlace de Compra]({row['Link_de_compra']})")
+        st.markdown(f"[Enlace de Compra]({row['link_compra']})")
     with col5:
-        status = row['Nos_confirmas_tu_regalo?']
+        status = row['confirmado']
         options = ["no", "Regalado! =)"]
-        default_index = 0 if "no" in status else 1
+        #default_index = 0 if "no" in status else 1
+        default_index = 0 if status is False else 1  # Evalúa el booleano correctamente
         new_status = st.selectbox(
             "Estado:",
             options,
@@ -90,16 +123,14 @@ for index, row in df.iterrows():
             key=f"status_selectbox_{index}",
             label_visibility="collapsed"
         )
-        st.session_state[f"new_status_{index}"] = new_status
-        # Almacenar el nuevo estado en la sesión para que persista al hacer clic en el botón
+        st.session_state[f"new_status_{index}"] = new_status # Almacenar nuevo estado con Guardar
     with col6:
         if st.button("Guardar", key=f"save_button_{index}"):
-            old_status = row['Nos_confirmas_tu_regalo?']
-            saved_status = st.session_state.get(f"new_status_{index}", old_status)
-            if saved_status != old_status:
-                update_gift_status(worksheet, index, saved_status)
-                st.success("¡Estado guardado!")
-                st.rerun() # Volver a ejecutar para actualizar la vista
+            saved_status = st.session_state.get(f"new_status_{index}", "no")
+            #update_gift_status(worksheet, index, saved_status)
+            update_gift_status(index, saved_status)
+            st.success("¡Estado guardado!")
+            st.rerun()
 
 st.write("---")
 st.markdown("¡Gracias por tu gemelosidad!")
