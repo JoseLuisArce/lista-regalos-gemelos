@@ -117,7 +117,7 @@ for index, row in df.iterrows():
         st.markdown(f"[Enlace de Compra]({row['link_compra']})")
     with col5:
         status = row['confirmado']
-        options = ["no", "Regalado! =)"]
+        options = ["aún no", "Regalado! =)"]
         #default_index = 0 if "no" in status else 1
         default_index = 0 if status is False else 1  # Evalúa el booleano correctamente
         new_status = st.selectbox(
@@ -130,7 +130,7 @@ for index, row in df.iterrows():
         st.session_state[f"new_status_{index}"] = new_status # Almacenar nuevo estado con Guardar
     with col6:
         if st.button("Guardar", key=f"save_button_{index}"):
-            saved_status = st.session_state.get(f"new_status_{index}", "no")
+            saved_status = st.session_state.get(f"new_status_{index}", "aún no")
             #update_gift_status(worksheet, index, saved_status)
             update_gift_status(index, saved_status)
             st.success("¡Estado guardado!")
