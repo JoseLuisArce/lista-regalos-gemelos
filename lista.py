@@ -101,12 +101,14 @@ st.markdown(
 
 #df, worksheet = get_gsheet_data()
 df = get_supabase_data()
+df = df.sort_values("precio", ascending=False)  # Ordena por precio (Mayor a menor)
+df = df.reset_index(drop=True)  # Resetea el índice para numeración limpia
 
 for index, row in df.iterrows():
     col1, col2, col3, col4, col5, col6 = st.columns([0.4,2,1.4,1,1.8,1.2])
 
     with col1:
-        st.write(f"**{row['orden']}**")
+        st.write(f"**{index + 1}**") # Genera numeración dinámica
     with col2:
         st.write(f"**{row['categoria']} - {row['tipo_regalo']}**")
     with col3:
