@@ -7,8 +7,8 @@ from supabase import create_client, Client
 #from google.oauth2.service_account import Credentials
 
 load_dotenv()
-supabase_url = st.secrets("SUPABASE_URL")
-supabase_anon_key = st.secrets("SUPABASE_ANON_KEY")
+supabase_url = st.secrets["SUPABASE_URL"]
+supabase_anon_key = st.secrets["SUPABASE_ANON_KEY"]
 supabase: Client = create_client(supabase_url, supabase_anon_key)
 ##supabase_url = os.environ.get("SUPABASE_URL")
 ##supabase_anon_key = os.environ.get("SUPABASE_ANON_KEY")
