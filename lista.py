@@ -119,7 +119,7 @@ for index, row in df.iterrows():
         status = row['confirmado']
         options = ["aún no", "Regalado! =)"]
         #default_index = 0 if "no" in status else 1
-        default_index = 0 if status is False else 1  # Evalúa el booleano correctamente
+        default_index = 0 if not status else 1  # Evalúa el booleano correctamente
         new_status = st.selectbox(
             "Estado:",
             options,
