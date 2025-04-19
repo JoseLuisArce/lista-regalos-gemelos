@@ -15,8 +15,8 @@ supabase: Client = create_client(supabase_url, supabase_anon_key)
 
 @st.cache_resource
 def get_supabase_data():
-    data = supabase.table("lista_regalos").select("*").execute()
-    df = pd.DataFrame(data.data)  # Extrae los datos correctamente
+    data = supabase.table("lista_regalos").select("*").order("precio", desc=True).execute()
+    df = pd.DataFrame(data.data)  
     return df
 
 def update_gift_status(index, new_status):
