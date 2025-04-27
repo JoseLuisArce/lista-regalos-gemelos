@@ -134,6 +134,7 @@ for index, row in df.iterrows():
             #update_gift_status(worksheet, index, saved_status)
             update_gift_status(index, saved_status)
             st.success("¡Estado guardado!")
+            df = get_supabase_data()
             st.rerun()
 
 st.write("---")
