@@ -13,7 +13,7 @@ supabase: Client = create_client(supabase_url, supabase_anon_key)
 ##supabase_url = os.environ.get("SUPABASE_URL")
 ##supabase_anon_key = os.environ.get("SUPABASE_ANON_KEY")
 
-@st.cache_resource
+#@st.cache_resource
 def get_supabase_data():
     data = supabase.table("lista_regalos").select("*").order("precio", desc=True).execute()
     df = pd.DataFrame(data.data)  
