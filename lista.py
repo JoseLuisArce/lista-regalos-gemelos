@@ -21,7 +21,7 @@ def get_supabase_data():
 
 def update_gift_status(index, new_status):
     confirmed_value = True if new_status == "Regalado! =)" else False
-    data, count = supabase.table("lista_regalos").update({"confirmado": confirmed_value}).eq("orden", index + 1).execute()
+    data, count = supabase.table("lista_regalos").update({"confirmado": confirmed_value}).eq("orden", row["orden"]).execute()
 
     print(f"Resultado de Supabase: {data}")
     print(f"Filas afectadas: {count}")
